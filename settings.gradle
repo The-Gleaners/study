@@ -1,5 +1,5 @@
 rootProject.name = 'lab'
-include 'classic'
-include 'nonblocking'
-include 'netty'
-
+include 'httpclient-research'
+include 'httpclient-research:classic'
+include 'httpclient-research:netty'
+include 'httpclient-research:nonblocking'

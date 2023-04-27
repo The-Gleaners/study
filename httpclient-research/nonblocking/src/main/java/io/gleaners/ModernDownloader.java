@@ -7,6 +7,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.concurrent.CompletableFuture;
 
 public class ModernDownloader
 {
@@ -22,8 +23,8 @@ public class ModernDownloader
 
         try
         {
-            HttpResponse<InputStream> response = getResponse(request);
-            write(response.body(), "file");
+            CompletableFuture<InputStream> response = getResponse(request);
+            write(response.join(), "file");
         }
         catch (IOException e)
         {
@@ -31,18 +32,12 @@ public class ModernDownloader
         }
     }
 
-    private HttpResponse<InputStream> getResponse(HttpRequest request)
+    private CompletableFuture<InputStream> getResponse(HttpRequest request)
     {
-        try
-        {
-            return HttpClient
-                .newHttpClient()
-                .send(request, HttpResponse.BodyHandlers.ofInputStream());
-        }
-        catch (IOException | InterruptedException e)
-        {
-            throw new RuntimeException(e);
-        }
+        return HttpClient
+            .newHttpClient()
+            .sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
+            .thenApply(HttpResponse::body);
     }
 
     private void write(InputStream reader, String destinationFIle) throws IOException
@@ -54,9 +49,9 @@ public class ModernDownloader
 
         try(FileOutputStream writer = new FileOutputStream(destinationFIle))
         {
-            while ((bytesRead = reader.read(buffer, 0, buffer.length)) != -1)
+            while ((bytesRead = reader.read()) != -1)
             {
-                writer.write(buffer, 0, bytesRead);
+                writer.write(bytesRead);
             }
         }
     }
